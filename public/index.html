@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConsórcioChat - Comunicação com seus Clientes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Tela de Login/Verificação -->
+  <div id="auth-screen" class="screen active">
+    <div class="auth-container">
+      <div class="logo">
+        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+          <rect width="60" height="60" rx="15" fill="url(#gradient)"/>
+          <path d="M15 25C15 21.6863 17.6863 19 21 19H39C42.3137 19 45 21.6863 45 25V33C45 36.3137 42.3137 39 39 39H33L25 45V39H21C17.6863 39 15 36.3137 15 33V25Z" fill="white"/>
+          <defs>
+            <linearGradient id="gradient" x1="0" y1="0" x2="60" y2="60">
+              <stop offset="0%" stop-color="#667eea"/>
+              <stop offset="100%" stop-color="#764ba2"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <h1>ConsórcioChat</h1>
+        <p>Conecte-se com seus clientes</p>
+      </div>
+
+      <!-- Enviar código -->
+      <div id="phone-input" class="auth-step active">
+        <div class="input-group">
+          <label for="phone">Número de Telefone</label>
+          <input 
+            type="tel" 
+            id="phone" 
+            placeholder="(00) 00000-0000"
+            maxlength="15"
+          >
+        </div>
+        <button id="send-code-btn" class="btn btn-primary">
+          Enviar Código
+        </button>
+        <p class="help-text">Você receberá um código de 6 dígitos</p>
+      </div>
+
+      <!-- Verificar código -->
+      <div id="code-input" class="auth-step">
+        <div class="input-group">
+          <label for="code">Código de Verificação</label>
+          <input 
+            type="text" 
+            id="code" 
+            placeholder="000000"
+            maxlength="6"
+            pattern="[0-9]*"
+            inputmode="numeric"
+          >
+        </div>
+        <button id="verify-btn" class="btn btn-primary">
+          Verificar
+        </button>
+        <button id="back-btn" class="btn btn-secondary">
+          Voltar
+        </button>
+        <p class="help-text">Digite o código recebido</p>
+      </div>
+
+      <div id="auth-loading" class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tela Principal de Chat -->
+  <div id="chat-screen" class="screen">
+    <div class="chat-container">
+      <!-- Sidebar com lista de conversas -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="user-info">
+            <div id="user-avatar" class="avatar">👤</div>
+            <div>
+              <div id="user-name" class="user-name">Usuário</div>
+              <div id="user-phone" class="user-phone"></div>
+            </div>
+          </div>
+          <button id="new-chat-btn" class="icon-btn" title="Nova Conversa">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="search-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="11" cy="11" r="8" stroke-width="2"/>
+            <path d="M21 21l-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input type="text" id="search-input" placeholder="Buscar conversas...">
+        </div>
+
+        <div id="conversations-list" class="conversations-list">
+          <!-- Conversas serão inseridas aqui -->
+        </div>
+      </aside>
+
+      <!-- Área de chat -->
+      <main class="chat-area">
+        <!-- Estado vazio -->
+        <div id="empty-state" class="empty-state">
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+            <rect width="80" height="80" rx="20" fill="#f3f4f6"/>
+            <path d="M20 35C20 30.5817 23.5817 27 28 27H52C56.4183 27 60 30.5817 60 35V45C60 49.4183 56.4183 53 52 53H44L34 60V53H28C23.5817 53 20 49.4183 20 45V35Z" fill="#9ca3af"/>
+          </svg>
+          <h2>Selecione uma conversa</h2>
+          <p>Escolha um contato na lista ou inicie uma nova conversa</p>
+        </div>
+
+        <!-- Chat ativo -->
+        <div id="active-chat" class="active-chat">
+          <div class="chat-header">
+            <div class="contact-info">
+              <div id="contact-avatar" class="avatar">👤</div>
+              <div>
+                <div id="contact-name" class="contact-name">Nome do Contato</div>
+                <div id="contact-status" class="contact-status">offline</div>
+              </div>
+            </div>
+            <button id="close-chat-btn" class="icon-btn mobile-only" title="Fechar">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <div id="messages-container" class="messages-container">
+            <!-- Mensagens serão inseridas aqui -->
+          </div>
+
+          <div id="typing-indicator" class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="message-input-container">
+            <textarea 
+              id="message-input" 
+              placeholder="Digite sua mensagem..."
+              rows="1"
+            ></textarea>
+            <button id="send-btn" class="send-btn" disabled>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal de Nova Conversa -->
+  <div id="new-chat-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Nova Conversa</h2>
+        <button id="close-modal-btn" class="icon-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="search-users" placeholder="Buscar por telefone ou nome...">
+        <div id="users-list" class="users-list">
+          <!-- Usuários disponíveis -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
