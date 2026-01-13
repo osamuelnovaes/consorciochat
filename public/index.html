@@ -146,12 +146,26 @@
               </svg>
             </button>
             <textarea id="message-input" placeholder="Digite sua mensagem..." rows="1"></textarea>
+            <button id="mic-btn" class="icon-btn mic-btn" title="Gravar áudio">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <line x1="12" y1="19" x2="12" y2="23" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <line x1="8" y1="23" x2="16" y2="23" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
             <button id="send-btn" class="send-btn" disabled>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-width="2" stroke-linecap="round"
                   stroke-linejoin="round" />
               </svg>
             </button>
+          </div>
+          <div id="recording-indicator" class="recording-indicator" style="display: none;">
+            <span class="recording-dot"></span>
+            <span id="recording-time">00:00</span>
+            <button id="stop-recording" class="btn btn-danger">Parar</button>
           </div>
           <div id="attachment-preview" class="attachment-preview" style="display: none;">
             <span id="attachment-name"></span>

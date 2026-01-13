@@ -54,7 +54,13 @@ const elements = {
     attachBtn: document.getElementById('attach-btn'),
     attachmentPreview: document.getElementById('attachment-preview'),
     attachmentName: document.getElementById('attachment-name'),
-    removeAttachment: document.getElementById('remove-attachment')
+    removeAttachment: document.getElementById('remove-attachment'),
+
+    // Voice recording
+    micBtn: document.getElementById('mic-btn'),
+    recordingIndicator: document.getElementById('recording-indicator'),
+    recordingTime: document.getElementById('recording-time'),
+    stopRecording: document.getElementById('stop-recording')
 };
 
 // ============================================
@@ -616,6 +622,112 @@ function clearAttachment() {
     elements.attachmentPreview.style.display = 'none';
     elements.attachmentName.textContent = '';
     updateSendButton();
+}
+
+// ============================================
+// GRAVAÇÃO DE ÁUDIO
+// ============================================
+
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingTimer = null;
+let recordingSeconds = 0;
+
+elements.micBtn.addEventListener('click', startRecording);
+elements.stopRecording.addEventListener('click', stopRecording);
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+                audioChunks.push(e.data);
+            }
+        };
+
+        mediaRecorder.onstop = async () => {
+            // Parar o stream de áudio
+            stream.getTracks().forEach(track => track.stop());
+
+            // Criar blob e fazer upload
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            await uploadAudio(audioBlob);
+        };
+
+        mediaRecorder.start();
+
+        // Mostrar indicador de gravação
+        elements.recordingIndicator.style.display = 'flex';
+        elements.micBtn.classList.add('recording');
+
+        // Timer
+        recordingSeconds = 0;
+        updateRecordingTime();
+        recordingTimer = setInterval(() => {
+            recordingSeconds++;
+            updateRecordingTime();
+        }, 1000);
+
+    } catch (error) {
+        console.error('Erro ao acessar microfone:', error);
+        alert('Não foi possível acessar o microfone. Verifique as permissões.');
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+
+    // Limpar timer e UI
+    clearInterval(recordingTimer);
+    elements.recordingIndicator.style.display = 'none';
+    elements.micBtn.classList.remove('recording');
+}
+
+function updateRecordingTime() {
+    const mins = Math.floor(recordingSeconds / 60).toString().padStart(2, '0');
+    const secs = (recordingSeconds % 60).toString().padStart(2, '0');
+    elements.recordingTime.textContent = `${mins}:${secs}`;
+}
+
+async function uploadAudio(audioBlob) {
+    const formData = new FormData();
+    formData.append('file', audioBlob, `audio_${Date.now()}.webm`);
+
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Enviar mensagem com áudio automaticamente
+            state.socket.emit('send_message', {
+                receiverId: state.currentContact.id,
+                message: '',
+                attachment: {
+                    url: data.url,
+                    type: 'audio',
+                    name: data.name
+                }
+            });
+        } else {
+            alert('Erro ao enviar áudio: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Erro no upload de áudio:', error);
+        alert('Erro ao enviar áudio');
+    }
 }
 
 function adjustTextareaHeight() {
