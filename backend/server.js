@@ -7,7 +7,7 @@ const path = require('path');
 
 const { sendVerificationCode, verifyCode, updateProfile } = require('./auth');
 const { authenticateToken } = require('./middleware');
-const { getConversations, getMessages, getAllUsers } = require('./messages');
+const { getConversations, getMessages, getAllUsers, findOrCreateUserByPhone } = require('./messages');
 const { initializeSocket } = require('./socket');
 
 const app = express();
@@ -98,6 +98,28 @@ app.get('/api/users', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar usuários:', error);
         res.status(500).json({ error: 'Erro ao buscar usuários' });
+    }
+});
+
+// Adicionar contato por telefone
+app.post('/api/users/find-or-create', authenticateToken, async (req, res) => {
+    try {
+        const { phone } = req.body;
+
+        if (!phone) {
+            return res.status(400).json({ error: 'Número de telefone obrigatório' });
+        }
+
+        const result = await findOrCreateUserByPhone(phone, req.user.userId);
+
+        if (result.error) {
+            return res.status(400).json({ error: result.error });
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('Erro ao adicionar contato:', error);
+        res.status(500).json({ error: 'Erro ao adicionar contato' });
     }
 });
 

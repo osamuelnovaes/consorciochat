@@ -514,6 +514,49 @@ elements.newChatModal.addEventListener('click', (e) => {
     }
 });
 
+// Adicionar contato por telefone
+document.getElementById('add-contact-btn').addEventListener('click', async () => {
+    const phone = elements.searchUsers.value.trim();
+
+    if (!phone) {
+        alert('Digite um número de telefone');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/users/find-or-create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify({ phone })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        if (data.success && data.user) {
+            elements.newChatModal.classList.remove('active');
+            elements.searchUsers.value = '';
+
+            // Abrir chat com o novo contato
+            openChat(data.user);
+
+            if (data.created) {
+                alert(`Contato "${data.user.name}" criado com sucesso!`);
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao adicionar contato:', error);
+        alert('Erro ao adicionar contato');
+    }
+});
+
 async function loadAllUsers() {
     try {
         const response = await fetch('/api/users', {
