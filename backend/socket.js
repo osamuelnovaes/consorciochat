@@ -35,13 +35,13 @@ function initializeSocket(io) {
         // Entrar em room pessoal
         socket.join(`user_${userId}`);
 
-        // Enviar mensagem
+        // Enviar mensagem (com suporte a anexos)
         socket.on('send_message', async (data) => {
             try {
-                const { receiverId, message } = data;
+                const { receiverId, message, attachment } = data;
 
                 // Salvar mensagem no banco
-                const savedMessage = await sendMessage(userId, receiverId, message);
+                const savedMessage = await sendMessage(userId, receiverId, message, attachment);
 
                 // Enviar para o remetente
                 socket.emit('message_sent', savedMessage);
@@ -49,7 +49,7 @@ function initializeSocket(io) {
                 // Enviar para o destinatário (se estiver online)
                 io.to(`user_${receiverId}`).emit('new_message', savedMessage);
 
-                console.log(`📨 Mensagem de ${userId} para ${receiverId}`);
+                console.log(`📨 Mensagem de ${userId} para ${receiverId}${attachment ? ' (com anexo)' : ''}`);
             } catch (error) {
                 console.error('Erro ao enviar mensagem:', error);
                 socket.emit('error', { message: 'Erro ao enviar mensagem' });

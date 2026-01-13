@@ -137,6 +137,14 @@
           </div>
 
           <div class="message-input-container">
+            <input type="file" id="file-input" hidden accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+            <button id="attach-btn" class="icon-btn" title="Anexar arquivo">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
             <textarea id="message-input" placeholder="Digite sua mensagem..." rows="1"></textarea>
             <button id="send-btn" class="send-btn" disabled>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -144,6 +152,10 @@
                   stroke-linejoin="round" />
               </svg>
             </button>
+          </div>
+          <div id="attachment-preview" class="attachment-preview" style="display: none;">
+            <span id="attachment-name"></span>
+            <button id="remove-attachment" class="icon-btn-small">✕</button>
           </div>
         </div>
       </main>
@@ -170,9 +182,6 @@
           <p style="font-size: 14px; color: #6b7280; margin-top: 12px; text-align: center;">
             Só é possível conversar com pessoas que já possuem conta no ConsórcioChat
           </p>
-        </div>
-        <div id="users-list" class="users-list">
-          <!-- Usuários disponíveis -->
         </div>
       </div>
     </div>

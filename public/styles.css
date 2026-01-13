@@ -950,3 +950,123 @@ body {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
+
+/* Estilos para anexos */
+.attachment-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+  margin: var(--spacing-sm) var(--spacing-lg) 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.icon-btn-small {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--gray-300);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.icon-btn-small:hover {
+  background: var(--danger);
+  color: white;
+}
+
+/* Anexos nas mensagens */
+.message-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+.message-video {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: var(--radius-md);
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+.message-audio {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.message-document {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: var(--spacing-sm);
+  transition: background 0.2s;
+}
+
+.message-document:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.message.received .message-document {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.message.received .message-document:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Botão de encaminhar e footer da mensagem */
+.message-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--spacing-xs);
+}
+
+.forward-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.message:hover .forward-btn {
+  opacity: 0.6;
+}
+
+.forward-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.message.received .forward-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.forwarded-tag {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: var(--spacing-xs);
+  font-style: italic;
+}

@@ -75,7 +75,11 @@ if (process.env.DATABASE_URL) {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             sender_id INTEGER NOT NULL,
             receiver_id INTEGER NOT NULL,
-            message TEXT NOT NULL,
+            message TEXT,
+            attachment_url TEXT,
+            attachment_type VARCHAR(50),
+            attachment_name VARCHAR(255),
+            forwarded_from INTEGER,
             read INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
@@ -123,7 +127,11 @@ async function initializeDatabase() {
                 id SERIAL PRIMARY KEY,
                 sender_id INTEGER NOT NULL REFERENCES users(id),
                 receiver_id INTEGER NOT NULL REFERENCES users(id),
-                message TEXT NOT NULL,
+                message TEXT,
+                attachment_url TEXT,
+                attachment_type VARCHAR(50),
+                attachment_name VARCHAR(255),
+                forwarded_from INTEGER REFERENCES messages(id),
                 read BOOLEAN DEFAULT false,
                 created_at TIMESTAMP DEFAULT NOW()
             )

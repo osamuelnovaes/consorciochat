@@ -59,11 +59,16 @@ async function getMessages(userId, contactId, limit = 50) {
     return (result.rows || []).reverse();
 }
 
-// Enviar mensagem
-async function sendMessage(senderId, receiverId, message) {
+// Enviar mensagem (com suporte a anexos)
+async function sendMessage(senderId, receiverId, message, attachment = null) {
+    const attachmentUrl = attachment?.url || null;
+    const attachmentType = attachment?.type || null;
+    const attachmentName = attachment?.name || null;
+
     const insertResult = await db.query(
-        `INSERT INTO messages (sender_id, receiver_id, message) VALUES ($1, $2, $3) RETURNING *`,
-        [senderId, receiverId, message]
+        `INSERT INTO messages (sender_id, receiver_id, message, attachment_url, attachment_type, attachment_name) 
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+        [senderId, receiverId, message || '', attachmentUrl, attachmentType, attachmentName]
     );
 
     let messageId;

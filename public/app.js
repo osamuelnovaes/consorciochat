@@ -6,7 +6,8 @@ const state = {
     currentContact: null,
     conversations: [],
     messages: {},
-    typingTimeout: null
+    typingTimeout: null,
+    pendingAttachment: null
 };
 
 // Elementos DOM
@@ -47,7 +48,13 @@ const elements = {
     newChatModal: document.getElementById('new-chat-modal'),
     closeModalBtn: document.getElementById('close-modal-btn'),
     searchUsers: document.getElementById('search-users'),
-    usersList: document.getElementById('users-list')
+
+    // File upload
+    fileInput: document.getElementById('file-input'),
+    attachBtn: document.getElementById('attach-btn'),
+    attachmentPreview: document.getElementById('attachment-preview'),
+    attachmentName: document.getElementById('attachment-name'),
+    removeAttachment: document.getElementById('remove-attachment')
 };
 
 // ============================================
@@ -367,17 +374,94 @@ async function loadMessages(contactId) {
     }
 }
 
+// Gerar HTML para anexos
+function getAttachmentHTML(msg) {
+    if (!msg.attachment_url) return '';
+
+    const type = msg.attachment_type;
+    const url = msg.attachment_url;
+    const name = msg.attachment_name || 'arquivo';
+
+    switch (type) {
+        case 'image':
+            return `<img src="${url}" class="message-image" alt="${name}" onclick="window.open('${url}', '_blank')">`;
+        case 'video':
+            return `<video src="${url}" class="message-video" controls></video>`;
+        case 'audio':
+            return `<audio src="${url}" class="message-audio" controls></audio>`;
+        default:
+            return `<a href="${url}" class="message-document" target="_blank" download="${name}">
+                📄 ${name}
+            </a>`;
+    }
+}
+
 function renderMessages(messages) {
     elements.messagesContainer.innerHTML = messages.map(msg => `
-    <div class="message ${msg.sender_id === state.user.id ? 'sent' : 'received'}">
+    <div class="message ${msg.sender_id === state.user.id ? 'sent' : 'received'}" data-id="${msg.id}">
       <div class="message-bubble">
-        ${escapeHtml(msg.message)}
-        <div class="message-time">${formatTime(msg.created_at)}</div>
+        ${msg.forwarded_from ? '<div class="forwarded-tag">⤴️ Encaminhada</div>' : ''}
+        ${getAttachmentHTML(msg)}
+        ${msg.message ? escapeHtml(msg.message) : ''}
+        <div class="message-footer">
+          <span class="message-time">${formatTime(msg.created_at)}</span>
+          <button class="forward-btn" onclick="forwardMessage(${msg.id})" title="Encaminhar">↪</button>
+        </div>
       </div>
     </div>
   `).join('');
 
     scrollToBottom();
+}
+
+// Encaminhar mensagem
+async function forwardMessage(messageId) {
+    const phone = prompt('Digite o número de telefone do destinatário:');
+    if (!phone) return;
+
+    try {
+        // Primeiro buscar o usuário pelo telefone
+        const userResponse = await fetch('/api/users/find', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify({ phone })
+        });
+
+        const userData = await userResponse.json();
+
+        if (userData.error) {
+            alert(userData.error);
+            return;
+        }
+
+        // Encaminhar a mensagem
+        const forwardResponse = await fetch('/api/messages/forward', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify({
+                messageId,
+                receiverIds: [userData.user.id]
+            })
+        });
+
+        const forwardData = await forwardResponse.json();
+
+        if (forwardData.success) {
+            alert(`Mensagem encaminhada para ${userData.user.name}!`);
+            loadConversations();
+        } else {
+            alert('Erro ao encaminhar: ' + forwardData.error);
+        }
+    } catch (error) {
+        console.error('Erro ao encaminhar:', error);
+        alert('Erro ao encaminhar mensagem');
+    }
 }
 
 function addMessageToUI(message) {
@@ -392,10 +476,15 @@ function addMessageToUI(message) {
     // Se é a conversa ativa, adicionar à UI
     if (state.currentContact && state.currentContact.id === contactId) {
         const messageHTML = `
-      <div class="message ${message.sender_id === state.user.id ? 'sent' : 'received'}">
+      <div class="message ${message.sender_id === state.user.id ? 'sent' : 'received'}" data-id="${message.id}">
         <div class="message-bubble">
-          ${escapeHtml(message.message)}
-          <div class="message-time">${formatTime(message.created_at)}</div>
+          ${message.forwarded_from ? '<div class="forwarded-tag">⤴️ Encaminhada</div>' : ''}
+          ${getAttachmentHTML(message)}
+          ${message.message ? escapeHtml(message.message) : ''}
+          <div class="message-footer">
+            <span class="message-time">${formatTime(message.created_at)}</span>
+            <button class="forward-btn" onclick="forwardMessage(${message.id})" title="Encaminhar">↪</button>
+          </div>
         </div>
       </div>
     `;
@@ -433,14 +522,16 @@ elements.messageInput.addEventListener('keypress', (e) => {
 function sendMessage() {
     const message = elements.messageInput.value.trim();
 
-    if (!message || !state.currentContact) return;
+    if ((!message && !state.pendingAttachment) || !state.currentContact) return;
 
     state.socket.emit('send_message', {
         receiverId: state.currentContact.id,
-        message: message
+        message: message,
+        attachment: state.pendingAttachment
     });
 
     elements.messageInput.value = '';
+    clearAttachment();
     adjustTextareaHeight();
     updateSendButton();
 
@@ -464,7 +555,67 @@ elements.messageInput.addEventListener('input', () => {
 });
 
 function updateSendButton() {
-    elements.sendBtn.disabled = !elements.messageInput.value.trim();
+    elements.sendBtn.disabled = !elements.messageInput.value.trim() && !state.pendingAttachment;
+}
+
+// ============================================
+// UPLOAD DE ARQUIVOS
+// ============================================
+
+elements.attachBtn.addEventListener('click', () => {
+    elements.fileInput.click();
+});
+
+elements.fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Mostrar preview
+    elements.attachmentName.textContent = `📎 ${file.name}`;
+    elements.attachmentPreview.style.display = 'flex';
+
+    // Upload do arquivo
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            state.pendingAttachment = {
+                url: data.url,
+                type: data.type,
+                name: data.name
+            };
+            updateSendButton();
+        } else {
+            alert('Erro ao fazer upload: ' + data.error);
+            clearAttachment();
+        }
+    } catch (error) {
+        console.error('Erro no upload:', error);
+        alert('Erro ao fazer upload');
+        clearAttachment();
+    }
+
+    elements.fileInput.value = '';
+});
+
+elements.removeAttachment.addEventListener('click', clearAttachment);
+
+function clearAttachment() {
+    state.pendingAttachment = null;
+    elements.attachmentPreview.style.display = 'none';
+    elements.attachmentName.textContent = '';
+    updateSendButton();
 }
 
 function adjustTextareaHeight() {
@@ -501,7 +652,8 @@ elements.closeChatBtn.addEventListener('click', () => {
 
 elements.newChatBtn.addEventListener('click', async () => {
     elements.newChatModal.classList.add('active');
-    await loadAllUsers();
+    elements.searchUsers.value = '';
+    elements.searchUsers.focus();
 });
 
 elements.closeModalBtn.addEventListener('click', () => {
