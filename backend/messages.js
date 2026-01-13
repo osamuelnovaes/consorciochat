@@ -109,8 +109,8 @@ async function markAsRead(userId, contactId) {
     return { success: true };
 }
 
-// Buscar ou criar usuário por telefone
-async function findOrCreateUserByPhone(phone, currentUserId) {
+// Buscar usuário por telefone (estilo WhatsApp - só mostra se já está cadastrado)
+async function findUserByPhone(phone, currentUserId) {
     // Verificar se usuário já existe
     const existingResult = await db.query(
         `SELECT id, phone, name, avatar, last_seen FROM users WHERE phone = $1`,
@@ -125,22 +125,8 @@ async function findOrCreateUserByPhone(phone, currentUserId) {
         return { success: true, user };
     }
 
-    // Criar novo usuário
-    const insertResult = await db.query(
-        `INSERT INTO users (phone, name) VALUES ($1, $2) RETURNING *`,
-        [phone, `Usuário ${phone.slice(-4)}`]
-    );
-
-    // Para SQLite que não suporta RETURNING
-    if (insertResult.rows.length === 0 && insertResult.lastID) {
-        const newUser = await db.query(
-            `SELECT id, phone, name, avatar, last_seen FROM users WHERE id = $1`,
-            [insertResult.lastID]
-        );
-        return { success: true, user: newUser.rows[0], created: true };
-    }
-
-    return { success: true, user: insertResult.rows[0], created: true };
+    // Usuário não encontrado - não criar, apenas informar
+    return { error: 'Usuário não encontrado. Esta pessoa ainda não se cadastrou no ConsórcioChat.' };
 }
 
 module.exports = {
@@ -149,5 +135,5 @@ module.exports = {
     sendMessage,
     getAllUsers,
     markAsRead,
-    findOrCreateUserByPhone
+    findUserByPhone
 };

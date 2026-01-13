@@ -514,7 +514,7 @@ elements.newChatModal.addEventListener('click', (e) => {
     }
 });
 
-// Adicionar contato por telefone
+// Buscar contato por telefone (estilo WhatsApp)
 document.getElementById('add-contact-btn').addEventListener('click', async () => {
     const phone = elements.searchUsers.value.trim();
 
@@ -524,7 +524,7 @@ document.getElementById('add-contact-btn').addEventListener('click', async () =>
     }
 
     try {
-        const response = await fetch('/api/users/find-or-create', {
+        const response = await fetch('/api/users/find', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -544,16 +544,12 @@ document.getElementById('add-contact-btn').addEventListener('click', async () =>
             elements.newChatModal.classList.remove('active');
             elements.searchUsers.value = '';
 
-            // Abrir chat com o novo contato
+            // Abrir chat com o contato encontrado
             openChat(data.user);
-
-            if (data.created) {
-                alert(`Contato "${data.user.name}" criado com sucesso!`);
-            }
         }
     } catch (error) {
-        console.error('Erro ao adicionar contato:', error);
-        alert('Erro ao adicionar contato');
+        console.error('Erro ao buscar contato:', error);
+        alert('Erro ao buscar contato');
     }
 });
 
