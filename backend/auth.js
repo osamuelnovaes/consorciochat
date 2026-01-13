@@ -35,16 +35,16 @@ async function sendVerificationCode(phone) {
                 });
 
                 console.log(`SMS enviado para ${phone}`);
-                return { success: true, message: 'Código enviado por SMS' };
+                return { success: true, message: 'Código enviado por SMS', smsReal: true };
             } catch (error) {
                 console.error('Erro ao enviar SMS via Twilio:', error.message);
-                console.log(`\n📱 CÓDIGO DE VERIFICAÇÃO PARA ${phone}: ${code} (Fallback)\n`);
-                return { success: true, message: 'Código gerado (falha no envio de SMS)' };
+                console.log(`\n📱 CÓDIGO DE VERIFICAÇÃO PARA ${phone}: ${code}\n`);
+                return { success: true, message: 'Código gerado', code: code, smsReal: false };
             }
         } else {
-            // Modo desenvolvimento (sem credenciais)
+            // Modo gratuito - retorna o código para exibir na tela
             console.log(`\n📱 CÓDIGO DE VERIFICAÇÃO PARA ${phone}: ${code}\n`);
-            return { success: true, message: 'Código enviado (Simulação)' };
+            return { success: true, message: 'Código gerado', code: code, smsReal: false };
         }
     } catch (err) {
         throw err;

@@ -66,7 +66,7 @@ elements.sendCodeBtn.addEventListener('click', async () => {
     showLoading();
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/send-code', {
+        const response = await fetch('/api/auth/send-code', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone })
@@ -78,7 +78,13 @@ elements.sendCodeBtn.addEventListener('click', async () => {
             hideLoading();
             elements.phoneInput.classList.remove('active');
             elements.codeInput.classList.add('active');
-            alert('Código enviado! Verifique o console do servidor.');
+
+            // Mostrar o código na tela (modo gratuito)
+            if (data.code) {
+                showVerificationCodeModal(data.code, phone);
+            } else {
+                alert('Código enviado por SMS para seu celular!');
+            }
         } else {
             hideLoading();
             alert(data.error || 'Erro ao enviar código');
@@ -89,6 +95,26 @@ elements.sendCodeBtn.addEventListener('click', async () => {
         console.error('Erro:', error);
     }
 });
+
+// Modal para mostrar o código de verificação
+function showVerificationCodeModal(code, phone) {
+    const modal = document.createElement('div');
+    modal.className = 'verification-modal';
+    modal.innerHTML = `
+        <div class="verification-modal-content">
+            <div class="verification-icon">📱</div>
+            <h3>Código de Verificação</h3>
+            <p>Seu código para o número <strong>${phone}</strong>:</p>
+            <div class="verification-code">${code}</div>
+            <p class="verification-note">Digite este código no campo abaixo para continuar</p>
+            <button class="verification-close-btn" onclick="this.parentElement.parentElement.remove()">Entendi</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Auto-preencher o código
+    elements.codeField.value = code;
+}
 
 // Verificar código
 elements.verifyBtn.addEventListener('click', async () => {
@@ -103,7 +129,7 @@ elements.verifyBtn.addEventListener('click', async () => {
     showLoading();
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/verify', {
+        const response = await fetch('/api/auth/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone, code })
@@ -187,7 +213,7 @@ function showChatScreen() {
 }
 
 function connectSocket() {
-    state.socket = io('http://localhost:3000', {
+    state.socket = io(window.location.origin, {
         auth: {
             token: state.token
         }
@@ -235,7 +261,7 @@ function connectSocket() {
 // Carregar conversas
 async function loadConversations() {
     try {
-        const response = await fetch('http://localhost:3000/api/conversations', {
+        const response = await fetch('/api/conversations', {
             headers: {
                 'Authorization': `Bearer ${state.token}`
             }
@@ -326,7 +352,7 @@ async function openChat(contact) {
 // Carregar mensagens
 async function loadMessages(contactId) {
     try {
-        const response = await fetch(`http://localhost:3000/api/messages/${contactId}`, {
+        const response = await fetch(`/api/messages/${contactId}`, {
             headers: {
                 'Authorization': `Bearer ${state.token}`
             }
@@ -490,7 +516,7 @@ elements.newChatModal.addEventListener('click', (e) => {
 
 async function loadAllUsers() {
     try {
-        const response = await fetch('http://localhost:3000/api/users', {
+        const response = await fetch('/api/users', {
             headers: {
                 'Authorization': `Bearer ${state.token}`
             }
@@ -531,7 +557,7 @@ function renderUsers(users, filter = '') {
 }
 
 elements.searchUsers.addEventListener('input', async (e) => {
-    const response = await fetch('http://localhost:3000/api/users', {
+    const response = await fetch('/api/users', {
         headers: {
             'Authorization': `Bearer ${state.token}`
         }
