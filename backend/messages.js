@@ -114,12 +114,28 @@ async function markAsRead(userId, contactId) {
     return { success: true };
 }
 
+// Normalizar número de telefone (remover caracteres não numéricos)
+function normalizePhone(phone) {
+    return phone ? phone.replace(/\D/g, '') : '';
+}
+
 // Buscar usuário por telefone (estilo WhatsApp - só mostra se já está cadastrado)
 async function findUserByPhone(phone, currentUserId) {
-    // Verificar se usuário já existe
+    // Normalizar o número buscado
+    const normalizedSearch = normalizePhone(phone);
+
+    if (normalizedSearch.length < 8) {
+        return { error: 'Digite um número de telefone válido (mínimo 8 dígitos)' };
+    }
+
+    // Buscar com LIKE para encontrar números com formatos diferentes
+    // Busca por números que contenham os dígitos do número buscado
     const existingResult = await db.query(
-        `SELECT id, phone, name, avatar, last_seen FROM users WHERE phone = $1`,
-        [phone]
+        `SELECT id, phone, name, avatar, last_seen FROM users 
+         WHERE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') 
+         LIKE '%' || $1 || '%'
+         OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') = $1`,
+        [normalizedSearch]
     );
 
     if (existingResult.rows.length > 0) {
@@ -130,7 +146,7 @@ async function findUserByPhone(phone, currentUserId) {
         return { success: true, user };
     }
 
-    // Usuário não encontrado - não criar, apenas informar
+    // Usuário não encontrado
     return { error: 'Usuário não encontrado. Esta pessoa ainda não se cadastrou no ConsórcioChat.' };
 }
 
