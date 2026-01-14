@@ -852,10 +852,8 @@ body {
   .sidebar-header {
     padding: var(--spacing-md);
     flex-wrap: nowrap;
-    position: sticky;
-    top: 0;
     background: var(--bg-primary);
-    z-index: 5;
+    border-bottom: 1px solid var(--gray-200);
   }
 
   .user-info {
