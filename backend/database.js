@@ -152,6 +152,18 @@ async function initializeDatabase() {
     await pool.query('CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_verification_phone ON verification_codes(phone)');
 
+    // Adicionar colunas de anexo se não existirem (migração)
+    try {
+      await pool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_url TEXT');
+      await pool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_type VARCHAR(50)');
+      await pool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_name VARCHAR(255)');
+      await pool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS forwarded_from INTEGER');
+      await pool.query('ALTER TABLE messages ALTER COLUMN message DROP NOT NULL');
+      console.log('✅ Migração de anexos aplicada');
+    } catch (migrationErr) {
+      console.log('ℹ️ Migração de anexos já aplicada ou não necessária');
+    }
+
     console.log('✅ Conectado ao banco de dados PostgreSQL');
     console.log('✅ Estrutura do banco de dados inicializada');
   } catch (err) {
