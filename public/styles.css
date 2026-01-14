@@ -1274,3 +1274,257 @@ body {
 .btn-danger:hover {
   background: rgba(255, 255, 255, 0.9);
 }
+
+/* Player de áudio customizado estilo WhatsApp */
+.audio-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  min-width: 200px;
+}
+
+.message.received .audio-player {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.audio-play-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.audio-play-btn:hover {
+  transform: scale(1.1);
+}
+
+.audio-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 30px;
+  flex: 1;
+}
+
+.wave-bar {
+  width: 3px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+  transition: height 0.1s, background 0.2s;
+}
+
+.message.received .wave-bar {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.wave-bar:nth-child(1) {
+  height: 10px;
+}
+
+.wave-bar:nth-child(2) {
+  height: 18px;
+}
+
+.wave-bar:nth-child(3) {
+  height: 12px;
+}
+
+.wave-bar:nth-child(4) {
+  height: 22px;
+}
+
+.wave-bar:nth-child(5) {
+  height: 16px;
+}
+
+.wave-bar:nth-child(6) {
+  height: 25px;
+}
+
+.wave-bar:nth-child(7) {
+  height: 14px;
+}
+
+.wave-bar:nth-child(8) {
+  height: 20px;
+}
+
+.wave-bar:nth-child(9) {
+  height: 10px;
+}
+
+.wave-bar:nth-child(10) {
+  height: 15px;
+}
+
+.wave-bar.active {
+  background: var(--primary);
+}
+
+.audio-waveform.playing .wave-bar {
+  animation: waveAnim 0.5s ease-in-out infinite alternate;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(6) {
+  animation-delay: 0.05s;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(7) {
+  animation-delay: 0.3s;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(8) {
+  animation-delay: 0.1s;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(9) {
+  animation-delay: 0.2s;
+}
+
+.audio-waveform.playing .wave-bar:nth-child(10) {
+  animation-delay: 0.15s;
+}
+
+@keyframes waveAnim {
+  0% {
+    transform: scaleY(0.5);
+  }
+
+  100% {
+    transform: scaleY(1.2);
+  }
+}
+
+.audio-duration {
+  font-size: 12px;
+  opacity: 0.8;
+  min-width: 35px;
+}
+
+/* Ondas de gravação */
+.recording-waveform {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+  flex: 1;
+}
+
+.rec-wave-bar {
+  width: 3px;
+  height: 8px;
+  background: white;
+  border-radius: 2px;
+  animation: recWaveAnim 0.4s ease-in-out infinite alternate;
+}
+
+.rec-wave-bar:nth-child(1) {
+  animation-delay: 0s;
+  height: 8px;
+}
+
+.rec-wave-bar:nth-child(2) {
+  animation-delay: 0.1s;
+  height: 14px;
+}
+
+.rec-wave-bar:nth-child(3) {
+  animation-delay: 0.2s;
+  height: 10px;
+}
+
+.rec-wave-bar:nth-child(4) {
+  animation-delay: 0.15s;
+  height: 18px;
+}
+
+.rec-wave-bar:nth-child(5) {
+  animation-delay: 0.25s;
+  height: 12px;
+}
+
+.rec-wave-bar:nth-child(6) {
+  animation-delay: 0.05s;
+  height: 16px;
+}
+
+.rec-wave-bar:nth-child(7) {
+  animation-delay: 0.3s;
+  height: 10px;
+}
+
+.rec-wave-bar:nth-child(8) {
+  animation-delay: 0.1s;
+  height: 14px;
+}
+
+@keyframes recWaveAnim {
+  0% {
+    transform: scaleY(0.6);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: scaleY(1.4);
+    opacity: 1;
+  }
+}
+
+.btn-stop-recording {
+  background: white;
+  color: var(--danger);
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-stop-recording:hover {
+  transform: scale(1.05);
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--danger), #e74c3c);
+  color: white;
+  border-radius: 25px;
+  margin: 8px 16px 0;
+}

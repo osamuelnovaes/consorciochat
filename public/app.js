@@ -440,6 +440,7 @@ function getAttachmentHTML(msg) {
     const type = msg.attachment_type;
     const url = msg.attachment_url;
     const name = msg.attachment_name || 'arquivo';
+    const uniqueId = `audio_${msg.id || Date.now()}`;
 
     switch (type) {
         case 'image':
@@ -447,12 +448,117 @@ function getAttachmentHTML(msg) {
         case 'video':
             return `<video src="${url}" class="message-video" controls></video>`;
         case 'audio':
-            return `<audio src="${url}" class="message-audio" controls></audio>`;
+            return `
+                <div class="audio-player" data-audio-id="${uniqueId}">
+                    <button class="audio-play-btn" onclick="toggleAudio('${uniqueId}', '${url}')">
+                        <span class="play-icon">▶</span>
+                        <span class="pause-icon" style="display:none">⏸</span>
+                    </button>
+                    <div class="audio-waveform">
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                    </div>
+                    <span class="audio-duration">0:00</span>
+                </div>`;
         default:
             return `<a href="${url}" class="message-document" target="_blank" download="${name}">
                 📄 ${name}
             </a>`;
     }
+}
+
+// Player de áudio customizado
+const audioPlayers = {};
+
+function toggleAudio(audioId, url) {
+    const playerEl = document.querySelector(`[data-audio-id="${audioId}"]`);
+
+    // Se já existe um player para este áudio
+    if (audioPlayers[audioId]) {
+        const audio = audioPlayers[audioId];
+        if (audio.paused) {
+            // Pausar outros áudios
+            Object.keys(audioPlayers).forEach(id => {
+                if (id !== audioId) {
+                    audioPlayers[id].pause();
+                    updateAudioUI(id, false);
+                }
+            });
+            audio.play();
+            updateAudioUI(audioId, true);
+        } else {
+            audio.pause();
+            updateAudioUI(audioId, false);
+        }
+    } else {
+        // Criar novo player
+        const audio = new Audio(url);
+        audioPlayers[audioId] = audio;
+
+        audio.addEventListener('loadedmetadata', () => {
+            const duration = formatDuration(audio.duration);
+            playerEl.querySelector('.audio-duration').textContent = duration;
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            const bars = playerEl.querySelectorAll('.wave-bar');
+            const activeBarCount = Math.floor((progress / 100) * bars.length);
+            bars.forEach((bar, i) => {
+                bar.classList.toggle('active', i < activeBarCount);
+            });
+        });
+
+        audio.addEventListener('ended', () => {
+            updateAudioUI(audioId, false);
+            const bars = playerEl.querySelectorAll('.wave-bar');
+            bars.forEach(bar => bar.classList.remove('active'));
+        });
+
+        // Pausar outros e tocar
+        Object.keys(audioPlayers).forEach(id => {
+            if (id !== audioId) {
+                audioPlayers[id].pause();
+                updateAudioUI(id, false);
+            }
+        });
+
+        audio.play();
+        updateAudioUI(audioId, true);
+    }
+}
+
+function updateAudioUI(audioId, playing) {
+    const playerEl = document.querySelector(`[data-audio-id="${audioId}"]`);
+    if (!playerEl) return;
+
+    const playIcon = playerEl.querySelector('.play-icon');
+    const pauseIcon = playerEl.querySelector('.pause-icon');
+    const waveform = playerEl.querySelector('.audio-waveform');
+
+    if (playing) {
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'inline';
+        waveform.classList.add('playing');
+    } else {
+        playIcon.style.display = 'inline';
+        pauseIcon.style.display = 'none';
+        waveform.classList.remove('playing');
+    }
+}
+
+function formatDuration(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 function renderMessages(messages) {
