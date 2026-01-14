@@ -633,14 +633,33 @@ let audioChunks = [];
 let recordingTimer = null;
 let recordingSeconds = 0;
 
+// Detectar mimeType suportado
+function getSupportedMimeType() {
+    const types = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav'];
+    for (const type of types) {
+        if (MediaRecorder.isTypeSupported(type)) {
+            return type;
+        }
+    }
+    return '';
+}
+
 elements.micBtn.addEventListener('click', startRecording);
 elements.stopRecording.addEventListener('click', stopRecording);
 
 async function startRecording() {
+    if (!state.currentContact) {
+        alert('Selecione um contato primeiro');
+        return;
+    }
+
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        const mimeType = getSupportedMimeType();
+        const options = mimeType ? { mimeType } : {};
+
+        mediaRecorder = new MediaRecorder(stream, options);
         audioChunks = [];
 
         mediaRecorder.ondataavailable = (e) => {
@@ -654,11 +673,11 @@ async function startRecording() {
             stream.getTracks().forEach(track => track.stop());
 
             // Criar blob e fazer upload
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            await uploadAudio(audioBlob);
+            const audioBlob = new Blob(audioChunks, { type: mimeType || 'audio/webm' });
+            await uploadAudio(audioBlob, mimeType);
         };
 
-        mediaRecorder.start();
+        mediaRecorder.start(1000); // Coletar dados a cada 1 segundo
 
         // Mostrar indicador de gravação
         elements.recordingIndicator.style.display = 'flex';
@@ -695,9 +714,17 @@ function updateRecordingTime() {
     elements.recordingTime.textContent = `${mins}:${secs}`;
 }
 
-async function uploadAudio(audioBlob) {
+async function uploadAudio(audioBlob, mimeType) {
+    if (!state.currentContact) {
+        alert('Selecione um contato primeiro');
+        return;
+    }
+
+    const extension = mimeType?.includes('mp4') ? '.m4a' :
+        mimeType?.includes('ogg') ? '.ogg' : '.webm';
+
     const formData = new FormData();
-    formData.append('file', audioBlob, `audio_${Date.now()}.webm`);
+    formData.append('file', audioBlob, `audio_${Date.now()}${extension}`);
 
     try {
         const response = await fetch('/api/upload', {
@@ -722,11 +749,11 @@ async function uploadAudio(audioBlob) {
                 }
             });
         } else {
-            alert('Erro ao enviar áudio: ' + data.error);
+            alert('Erro ao enviar áudio: ' + (data.error || 'Erro desconhecido'));
         }
     } catch (error) {
         console.error('Erro no upload de áudio:', error);
-        alert('Erro ao enviar áudio');
+        alert('Erro ao enviar áudio: ' + error.message);
     }
 }
 
