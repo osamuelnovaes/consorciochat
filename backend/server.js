@@ -70,26 +70,52 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 initializeSocket(io);
 
 // Endpoint de upload de arquivos
-app.post('/api/upload', authenticateToken, upload.single('file'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+app.post('/api/upload', authenticateToken, (req, res) => {
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            console.error('Erro no multer:', err);
+
+            // Erro de limite de tamanho
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({
+                    error: 'Arquivo muito grande. Limite: 200MB'
+                });
+            }
+
+            // Tipo de arquivo não permitido
+            if (err.message === 'Tipo de arquivo não permitido') {
+                return res.status(400).json({
+                    error: 'Tipo de arquivo não suportado'
+                });
+            }
+
+            return res.status(500).json({
+                error: 'Erro no upload: ' + err.message
+            });
         }
 
-        const fileUrl = `/uploads/${req.file.filename}`;
-        const fileType = req.file.mimetype.split('/')[0]; // image, video, audio, application
+        try {
+            if (!req.file) {
+                return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+            }
 
-        res.json({
-            success: true,
-            url: fileUrl,
-            type: fileType === 'application' ? 'document' : fileType,
-            name: req.file.originalname,
-            size: req.file.size
-        });
-    } catch (error) {
-        console.error('Erro no upload:', error);
-        res.status(500).json({ error: 'Erro ao fazer upload' });
-    }
+            const fileUrl = `/uploads/${req.file.filename}`;
+            const fileType = req.file.mimetype.split('/')[0]; // image, video, audio, application
+
+            console.log(`✅ Upload: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)}MB)`);
+
+            res.json({
+                success: true,
+                url: fileUrl,
+                type: fileType === 'application' ? 'document' : fileType,
+                name: req.file.originalname,
+                size: req.file.size
+            });
+        } catch (error) {
+            console.error('Erro no processamento:', error);
+            res.status(500).json({ error: 'Erro ao processar arquivo' });
+        }
+    });
 });
 
 // Rotas de autenticação
