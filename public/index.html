@@ -69,7 +69,11 @@
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="user-info">
-            <div id="user-avatar" class="avatar">👤</div>
+            <div id="user-avatar" class="avatar avatar-clickable" title="Clique para mudar foto">
+              👤
+              <div class="avatar-overlay">📷</div>
+            </div>
+            <input type="file" id="avatar-input" hidden accept="image/*">
             <div>
               <div id="user-name" class="user-name">Usuário</div>
               <div id="user-phone" class="user-phone"></div>

@@ -214,6 +214,42 @@ app.post('/api/users/find', authenticateToken, async (req, res) => {
     }
 });
 
+// Atualizar foto de perfil
+app.post('/api/profile/avatar', authenticateToken, (req, res) => {
+    upload.single('avatar')(req, res, async (err) => {
+        if (err) {
+            console.error('Erro no upload de avatar:', err);
+            return res.status(400).json({ error: 'Erro ao fazer upload da foto' });
+        }
+
+        try {
+            if (!req.file) {
+                return res.status(400).json({ error: 'Nenhuma foto enviada' });
+            }
+
+            const avatarUrl = `/uploads/${req.file.filename}`;
+            const userId = req.user.userId;
+
+            // Atualizar avatar no banco
+            const db = require('./database');
+            await db.query(
+                'UPDATE users SET avatar = $1 WHERE id = $2',
+                [avatarUrl, userId]
+            );
+
+            console.log(`✅ Avatar atualizado para usuário ${userId}`);
+
+            res.json({
+                success: true,
+                avatar: avatarUrl
+            });
+        } catch (error) {
+            console.error('Erro ao atualizar avatar:', error);
+            res.status(500).json({ error: 'Erro ao salvar foto de perfil' });
+        }
+    });
+});
+
 // Encaminhar mensagem para múltiplos destinatários
 app.post('/api/messages/forward', authenticateToken, async (req, res) => {
     try {

@@ -60,7 +60,10 @@ const elements = {
     micBtn: document.getElementById('mic-btn'),
     recordingIndicator: document.getElementById('recording-indicator'),
     recordingTime: document.getElementById('recording-time'),
-    stopRecording: document.getElementById('stop-recording')
+    stopRecording: document.getElementById('stop-recording'),
+
+    // Avatar
+    avatarInput: document.getElementById('avatar-input')
 };
 
 // ============================================
@@ -218,12 +221,62 @@ function showChatScreen() {
     elements.userName.textContent = state.user.name;
     elements.userPhone.textContent = state.user.phone;
 
+    // Mostrar avatar se existir
+    if (state.user.avatar) {
+        elements.userAvatar.innerHTML = `<img src="${state.user.avatar}" alt="Avatar"><div class="avatar-overlay">📷</div>`;
+    }
+
     // Conectar WebSocket
     connectSocket();
 
     // Carregar conversas
     loadConversations();
 }
+
+// Handler para trocar foto de perfil
+elements.userAvatar.addEventListener('click', () => {
+    elements.avatarInput.click();
+});
+
+elements.avatarInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Verificar se é imagem
+    if (!file.type.startsWith('image/')) {
+        alert('Por favor, selecione uma imagem');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+        const response = await fetch('/api/profile/avatar', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Atualizar avatar na UI
+            elements.userAvatar.innerHTML = `<img src="${data.avatar}" alt="Avatar"><div class="avatar-overlay">📷</div>`;
+            state.user.avatar = data.avatar;
+            alert('Foto de perfil atualizada!');
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar avatar:', error);
+        alert('Erro ao atualizar foto de perfil');
+    }
+
+    e.target.value = '';
+});
 
 function connectSocket() {
     state.socket = io(window.location.origin, {
