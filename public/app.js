@@ -373,6 +373,8 @@ elements.avatarInput.addEventListener('change', async (e) => {
             // Atualizar avatar na UI
             elements.userAvatar.innerHTML = `<img src="${data.avatar}" alt="Avatar"><div class="avatar-overlay">📷</div>`;
             state.user.avatar = data.avatar;
+            // Salvar no localStorage para persistir
+            localStorage.setItem('user', JSON.stringify(state.user));
             alert('Foto de perfil atualizada!');
         } else {
             alert('Erro: ' + data.error);
