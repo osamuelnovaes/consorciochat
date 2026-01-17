@@ -775,45 +775,75 @@ function addMessageToUI(message) {
 
 // Pedir permissão para notificações
 function requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                console.log('✅ Notificações permitidas');
-            }
-        });
+    if ('Notification' in window) {
+        if (Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                console.log('📬 Permissão de notificação:', permission);
+                if (permission === 'granted') {
+                    // Testar com uma notificação
+                    showNotification('ConsórcioChat', '🔔 Notificações ativadas!');
+                }
+            });
+        } else {
+            console.log('📬 Permissão atual:', Notification.permission);
+        }
+    } else {
+        console.log('❌ Navegador não suporta notificações');
     }
 }
 
 // Mostrar notificação
 function showNotification(title, body, icon = '/icons/icon-512.svg') {
-    // Não mostrar se a página estiver em foco
-    if (document.hasFocus()) return;
+    console.log('📬 Tentando mostrar notificação:', title, body);
 
-    if ('Notification' in window && Notification.permission === 'granted') {
-        const notification = new Notification(title, {
-            body: body,
-            icon: icon,
-            badge: '/icons/icon-512.svg',
-            tag: 'consorcio-message',
-            renotify: true,
-            vibrate: [200, 100, 200]
-        });
+    if (!('Notification' in window)) {
+        console.log('❌ Notificações não suportadas');
+        return;
+    }
 
-        // Focar na aba quando clicar na notificação
-        notification.onclick = () => {
-            window.focus();
-            notification.close();
-        };
+    if (Notification.permission !== 'granted') {
+        console.log('❌ Permissão negada:', Notification.permission);
+        return;
+    }
 
-        // Auto-fechar após 5 segundos
-        setTimeout(() => notification.close(), 5000);
+    try {
+        // Usar Service Worker se disponível (melhor para PWA)
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification(title, {
+                    body: body,
+                    icon: icon,
+                    badge: '/icons/icon-512.svg',
+                    tag: 'consorcio-message-' + Date.now(),
+                    vibrate: [200, 100, 200],
+                    requireInteraction: false
+                });
+            });
+        } else {
+            // Fallback para notificação normal
+            const notification = new Notification(title, {
+                body: body,
+                icon: icon,
+                tag: 'consorcio-message'
+            });
+
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+
+            setTimeout(() => notification.close(), 5000);
+        }
+        console.log('✅ Notificação enviada!');
+    } catch (error) {
+        console.error('❌ Erro na notificação:', error);
     }
 }
 
 // Pedir permissão quando logar
 window.addEventListener('load', () => {
     if (state.token) {
-        requestNotificationPermission();
+        setTimeout(requestNotificationPermission, 1000);
     }
 });
 
