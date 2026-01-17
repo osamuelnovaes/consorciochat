@@ -769,12 +769,69 @@ function addMessageToUI(message) {
     loadConversations();
 }
 
+// ============================================
+// NOTIFICAÇÕES PUSH
+// ============================================
+
+// Pedir permissão para notificações
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('✅ Notificações permitidas');
+            }
+        });
+    }
+}
+
+// Mostrar notificação
+function showNotification(title, body, icon = '/icons/icon-512.svg') {
+    // Não mostrar se a página estiver em foco
+    if (document.hasFocus()) return;
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+            body: body,
+            icon: icon,
+            badge: '/icons/icon-512.svg',
+            tag: 'consorcio-message',
+            renotify: true,
+            vibrate: [200, 100, 200]
+        });
+
+        // Focar na aba quando clicar na notificação
+        notification.onclick = () => {
+            window.focus();
+            notification.close();
+        };
+
+        // Auto-fechar após 5 segundos
+        setTimeout(() => notification.close(), 5000);
+    }
+}
+
+// Pedir permissão quando logar
+window.addEventListener('load', () => {
+    if (state.token) {
+        requestNotificationPermission();
+    }
+});
+
 function handleNewMessage(message) {
     addMessageToUI(message);
 
     // Se não for a conversa ativa, mostrar notificação
     if (!state.currentContact || state.currentContact.id !== message.sender_id) {
-        // Aqui você pode adicionar notificações do navegador
+        // Mostrar notificação do navegador
+        const messagePreview = message.message
+            ? message.message.substring(0, 50) + (message.message.length > 50 ? '...' : '')
+            : (message.attachment_type ? '📎 Anexo' : 'Nova mensagem');
+
+        showNotification(
+            message.sender_name || 'Nova mensagem',
+            messagePreview
+        );
+
         console.log('Nova mensagem de:', message.sender_name);
     } else {
         // Marcar como lido
