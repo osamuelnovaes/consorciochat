@@ -9,6 +9,7 @@ async function getConversations(userId) {
             u.name,
             u.avatar,
             u.last_seen,
+            c.nickname,
             (SELECT message FROM messages 
              WHERE (sender_id = $1 AND receiver_id = u.id) 
                 OR (sender_id = u.id AND receiver_id = $1)
@@ -20,6 +21,7 @@ async function getConversations(userId) {
             (SELECT COUNT(*) FROM messages 
              WHERE sender_id = u.id AND receiver_id = $1 AND read = false) as unread_count
         FROM users u
+        LEFT JOIN contacts c ON c.user_id = $1 AND c.contact_id = u.id
         WHERE u.id != $1 
             AND EXISTS (
                 SELECT 1 FROM messages 

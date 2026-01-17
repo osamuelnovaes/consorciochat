@@ -164,6 +164,14 @@ async function initializeDatabase() {
       console.log('ℹ️ Migração de anexos já aplicada ou não necessária');
     }
 
+    // Adicionar coluna nickname para contatos (apelidos personalizados)
+    try {
+      await pool.query('ALTER TABLE contacts ADD COLUMN IF NOT EXISTS nickname VARCHAR(100)');
+      console.log('✅ Migração de nicknames aplicada');
+    } catch (nicknameMigrationErr) {
+      console.log('ℹ️ Migração de nicknames já aplicada ou não necessária');
+    }
+
     console.log('✅ Conectado ao banco de dados PostgreSQL');
     console.log('✅ Estrutura do banco de dados inicializada');
   } catch (err) {

@@ -250,6 +250,47 @@ app.post('/api/profile/avatar', authenticateToken, (req, res) => {
     });
 });
 
+// Renomear contato (apelido personalizado)
+app.post('/api/contacts/rename', authenticateToken, async (req, res) => {
+    try {
+        const { contactId, nickname } = req.body;
+        const userId = req.user.userId;
+
+        if (!contactId) {
+            return res.status(400).json({ error: 'ID do contato obrigatório' });
+        }
+
+        const db = require('./database');
+
+        // Verificar se já existe na tabela de contatos, senão criar
+        const existing = await db.query(
+            'SELECT * FROM contacts WHERE user_id = $1 AND contact_id = $2',
+            [userId, contactId]
+        );
+
+        if (existing.rows.length === 0) {
+            // Criar registro de contato com nickname
+            await db.query(
+                'INSERT INTO contacts (user_id, contact_id, nickname) VALUES ($1, $2, $3)',
+                [userId, contactId, nickname || null]
+            );
+        } else {
+            // Atualizar nickname
+            await db.query(
+                'UPDATE contacts SET nickname = $1 WHERE user_id = $2 AND contact_id = $3',
+                [nickname || null, userId, contactId]
+            );
+        }
+
+        console.log(`✅ Contato ${contactId} renomeado para "${nickname}" por usuário ${userId}`);
+
+        res.json({ success: true, nickname: nickname });
+    } catch (error) {
+        console.error('Erro ao renomear contato:', error);
+        res.status(500).json({ error: 'Erro ao renomear contato' });
+    }
+});
+
 // Encaminhar mensagem para múltiplos destinatários
 app.post('/api/messages/forward', authenticateToken, async (req, res) => {
     try {

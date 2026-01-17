@@ -499,10 +499,12 @@ elements.searchInput.addEventListener('input', (e) => {
 async function openChat(contact) {
     state.currentContact = contact;
 
-    // Atualizar UI
+    // Atualizar UI - usar apelido se existir
     elements.emptyState.style.display = 'none';
     elements.activeChat.classList.add('visible');
-    elements.contactName.textContent = contact.name;
+    elements.contactName.textContent = contact.nickname || contact.name;
+    elements.contactName.title = 'Clique para renomear';
+    elements.contactName.style.cursor = 'pointer';
     elements.contactStatus.textContent = 'offline';
     elements.contactStatus.classList.remove('online');
 
@@ -523,6 +525,47 @@ async function openChat(contact) {
     // Atualizar lista de conversas
     renderConversations();
 }
+
+// Renomear contato
+elements.contactName.addEventListener('click', async () => {
+    if (!state.currentContact) return;
+
+    const currentName = state.currentContact.nickname || state.currentContact.name;
+    const newName = prompt('Digite o novo nome para este contato:', currentName);
+
+    if (newName === null) return; // Cancelou
+
+    try {
+        const response = await fetch('/api/contacts/rename', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify({
+                contactId: state.currentContact.id,
+                nickname: newName.trim() || null
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            state.currentContact.nickname = data.nickname;
+            elements.contactName.textContent = data.nickname || state.currentContact.name;
+
+            // Atualizar na lista de conversas
+            loadConversations();
+
+            alert('Contato renomeado com sucesso!');
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Erro ao renomear:', error);
+        alert('Erro ao renomear contato');
+    }
+});
 
 // Carregar mensagens
 async function loadMessages(contactId) {
