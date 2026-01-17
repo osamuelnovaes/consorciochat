@@ -1528,3 +1528,98 @@ body {
   border-radius: 25px;
   margin: 8px 16px 0;
 }
+
+/* Popup de instalação PWA */
+#install-popup {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding: 16px;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.install-popup-content {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.install-icon {
+  font-size: 48px;
+}
+
+.install-text {
+  text-align: center;
+}
+
+.install-text h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.install-text p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.install-buttons {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.btn-install {
+  flex: 1;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-install:hover {
+  transform: scale(1.02);
+}
+
+.btn-dismiss {
+  flex: 1;
+  padding: 12px 24px;
+  background: var(--gray-100);
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-dismiss:hover {
+  background: var(--gray-200);
+}

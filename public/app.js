@@ -1,3 +1,110 @@
+// ============================================
+// PWA - INSTALAÇÃO DO APP
+// ============================================
+
+// Registrar Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('✅ Service Worker registrado'))
+            .catch(err => console.log('❌ SW erro:', err));
+    });
+}
+
+// Capturar evento de instalação
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Mostrar popup automaticamente
+    showInstallPopup();
+});
+
+// Mostrar popup de instalação
+function showInstallPopup() {
+    // Verificar se já instalou ou se já mostrou recentemente
+    if (localStorage.getItem('pwaInstalled') || localStorage.getItem('pwaPromptDismissed')) {
+        return;
+    }
+
+    // Criar popup
+    const popup = document.createElement('div');
+    popup.id = 'install-popup';
+    popup.innerHTML = `
+        <div class="install-popup-content">
+            <div class="install-icon">📱</div>
+            <div class="install-text">
+                <h3>Instalar ConsórcioChat</h3>
+                <p>Adicione à sua tela inicial para acesso rápido!</p>
+            </div>
+            <div class="install-buttons">
+                <button id="install-btn" class="btn-install">Instalar</button>
+                <button id="dismiss-btn" class="btn-dismiss">Agora não</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(popup);
+
+    // Botão instalar
+    document.getElementById('install-btn').addEventListener('click', async () => {
+        popup.remove();
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                localStorage.setItem('pwaInstalled', 'true');
+            }
+            deferredPrompt = null;
+        }
+    });
+
+    // Botão dispensar
+    document.getElementById('dismiss-btn').addEventListener('click', () => {
+        popup.remove();
+        // Não mostrar novamente por 24 horas
+        localStorage.setItem('pwaPromptDismissed', Date.now().toString());
+        setTimeout(() => localStorage.removeItem('pwaPromptDismissed'), 24 * 60 * 60 * 1000);
+    });
+}
+
+// Mostrar popup para iOS (que não suporta beforeinstallprompt)
+function showIOSInstallPopup() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isIOS && !isInStandaloneMode && !localStorage.getItem('iosPromptDismissed')) {
+        const popup = document.createElement('div');
+        popup.id = 'install-popup';
+        popup.innerHTML = `
+            <div class="install-popup-content">
+                <div class="install-icon">📱</div>
+                <div class="install-text">
+                    <h3>Instalar ConsórcioChat</h3>
+                    <p>Toque em <strong>Compartilhar</strong> ⬆️ e depois <strong>"Adicionar à Tela de Início"</strong></p>
+                </div>
+                <div class="install-buttons">
+                    <button id="ios-dismiss-btn" class="btn-dismiss">Entendi</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(popup);
+
+        document.getElementById('ios-dismiss-btn').addEventListener('click', () => {
+            popup.remove();
+            localStorage.setItem('iosPromptDismissed', 'true');
+        });
+    }
+}
+
+// Mostrar popup iOS quando página carregar
+window.addEventListener('load', () => {
+    setTimeout(showIOSInstallPopup, 2000);
+});
+
+// ============================================
+// ESTADO DA APLICAÇÃO
+// ============================================
+
 // Estado da aplicação
 const state = {
     token: localStorage.getItem('token') || null,
