@@ -526,8 +526,11 @@ async function openChat(contact) {
     renderConversations();
 }
 
-// Renomear contato
-elements.contactName.addEventListener('click', async () => {
+// Renomear contato - usando event delegation para garantir que funcione
+document.addEventListener('click', async (e) => {
+    // Verificar se clicou no nome do contato
+    if (!e.target.closest('#contact-name')) return;
+
     console.log('📝 Clique em renomear contato detectado');
 
     if (!state.currentContact) {
