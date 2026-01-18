@@ -528,12 +528,19 @@ async function openChat(contact) {
 
 // Renomear contato
 elements.contactName.addEventListener('click', async () => {
-    if (!state.currentContact) return;
+    console.log('📝 Clique em renomear contato detectado');
+
+    if (!state.currentContact) {
+        console.warn('⚠️ Nenhum contato selecionado');
+        return;
+    }
 
     const currentName = state.currentContact.nickname || state.currentContact.name;
     const newName = prompt('Digite o novo nome para este contato:', currentName);
 
     if (newName === null) return; // Cancelou
+
+    console.log(`📝 Tentando renomear contato ${state.currentContact.id} para "${newName}"`);
 
     try {
         const response = await fetch('/api/contacts/rename', {
@@ -551,6 +558,7 @@ elements.contactName.addEventListener('click', async () => {
         const data = await response.json();
 
         if (data.success) {
+            console.log('✅ Contato renomeado com sucesso');
             state.currentContact.nickname = data.nickname;
             elements.contactName.textContent = data.nickname || state.currentContact.name;
 
@@ -559,11 +567,12 @@ elements.contactName.addEventListener('click', async () => {
 
             alert('Contato renomeado com sucesso!');
         } else {
+            console.error('❌ Erro servidor:', data.error);
             alert('Erro: ' + data.error);
         }
     } catch (error) {
-        console.error('Erro ao renomear:', error);
-        alert('Erro ao renomear contato');
+        console.error('❌ Erro ao renomear:', error);
+        alert('Erro ao renomear contato: Verifique sua conexão');
     }
 });
 

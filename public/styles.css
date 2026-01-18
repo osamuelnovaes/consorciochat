@@ -553,6 +553,15 @@ body {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  user-select: none;
+}
+
+.contact-name:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .contact-status {
