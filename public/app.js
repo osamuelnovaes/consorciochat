@@ -450,10 +450,12 @@ async function loadConversations() {
 }
 
 function renderConversations(filter = '') {
-    const filtered = state.conversations.filter(conv =>
-        conv.name.toLowerCase().includes(filter.toLowerCase()) ||
-        conv.phone.includes(filter)
-    );
+    const filtered = state.conversations.filter(conv => {
+        const displayName = conv.nickname || conv.name;
+        return displayName.toLowerCase().includes(filter.toLowerCase()) ||
+            conv.name.toLowerCase().includes(filter.toLowerCase()) ||
+            conv.phone.includes(filter);
+    });
 
     if (filtered.length === 0) {
         elements.conversationsList.innerHTML = `
@@ -465,20 +467,23 @@ function renderConversations(filter = '') {
         return;
     }
 
-    elements.conversationsList.innerHTML = filtered.map(conv => `
-    <div class="conversation-item ${state.currentContact && state.currentContact.id === conv.id ? 'active' : ''}" 
-         data-id="${conv.id}">
-      <div class="avatar">${conv.name.charAt(0).toUpperCase()}</div>
-      <div class="conversation-content">
-        <div class="conversation-header">
-          <div class="conversation-name">${conv.name}</div>
-          <div class="conversation-time">${formatTime(conv.last_message_time)}</div>
+    elements.conversationsList.innerHTML = filtered.map(conv => {
+        const displayName = conv.nickname || conv.name;
+        return `
+        <div class="conversation-item ${state.currentContact && state.currentContact.id === conv.id ? 'active' : ''}" 
+             data-id="${conv.id}">
+          <div class="avatar">${displayName.charAt(0).toUpperCase()}</div>
+          <div class="conversation-content">
+            <div class="conversation-header">
+              <div class="conversation-name">${displayName}</div>
+              <div class="conversation-time">${formatTime(conv.last_message_time)}</div>
+            </div>
+            <div class="conversation-preview">${conv.last_message || 'Sem mensagens'}</div>
+          </div>
+          ${conv.unread_count > 0 ? `<div class="unread-badge">${conv.unread_count}</div>` : ''}
         </div>
-        <div class="conversation-preview">${conv.last_message || 'Sem mensagens'}</div>
-      </div>
-      ${conv.unread_count > 0 ? `<div class="unread-badge">${conv.unread_count}</div>` : ''}
-    </div>
-  `).join('');
+      `;
+    }).join('');
 
     // Adicionar eventos de clique
     document.querySelectorAll('.conversation-item').forEach(item => {
